@@ -10,10 +10,6 @@ from policies import base_policy
 from policies import *
 from policies.base_policy import Policy
 
-# from multiprocessing import Process
-
-POLICIES_DIR = "/Users/yuvalj/projects/Snake/Snake_Code/policies"
-
 
 def get_random_reward(ocupied):
     n = np.random.randint(6,10)
@@ -113,20 +109,17 @@ def first_round(policy_to_run, to_render):
     
     generateRewardRenderMap()
     
-    # args = parse_args()
     args = get_game_defaults()
     
     args.to_render = to_render
     args.player_init_time = 2
     
-    # args.game_duration = np.random.randint(500, 2500)
-    args.game_duration = np.random.randint(50, 250)
+    
+    args.game_duration = np.random.randint(1000, 2500)
     args.random_food_prob = np.random.uniform(.1, .5)
     args.obstacle_density = np.random.uniform(.05, .1)
-    # args.board_size = (10, 10)
+    args.board_size = (10, 100) # TODO: Should we change?
     
-    
-    print(args)
     policies = find_policy([policy_to_run])
     for name, policy in policies.items():        
         
@@ -139,41 +132,28 @@ def first_round(policy_to_run, to_render):
         
         
 def second_round(policies_str, to_render):
-    
-    
     generateRewardRenderMap()
     
-    # args = parse_args()
     args = get_game_defaults()
     
     args.to_render = to_render
     args.player_init_time = 2
     
-    # args.game_duration = np.random.randint(500, 2500)
-    args.game_duration = 10000 # np.random.randint(50, 250)
+    args.game_duration = np.random.randint(1000, 2500)
     args.random_food_prob = np.random.uniform(.1, .5)
     args.obstacle_density = np.random.uniform(.05, .1)
     args.board_size = (10, 100)
     
     
-    print(args)
     policies = find_policy(policies_str.split(';'))
-    # args.__dict__['policies'] = [policies.values]
     
-    # for name, policy in policies.items():        
-        
     args.__dict__['policies'] = list(policies.values())
     args.__dict__['name'] = list(policies.keys())
     g = Game(args)
     g.run()    
     
 def get_evalution_args():
-    # p = argparse.ArgumentParser()
-    # p.add_argument('filename')
-    
     parser = argparse.ArgumentParser()
-    # parser.add_argument('--seed', help="seed for randoms")
-
     parser.add_argument('--seed', '-s', type=int, help="seed for randoms")
     parser.add_argument('--policy', '-p', type=str, help='file name to run seperated by ;')
     parser.add_argument('--round_to_run', '-r', type=int, default=1, help='which round to run')
@@ -183,10 +163,6 @@ def get_evalution_args():
     return args
 
 if __name__ == '__main__':
-    import timeit
-
-    start = timeit.default_timer()
-
     args = get_evalution_args()
     np.random.seed(seed=args.seed)
     
@@ -194,8 +170,4 @@ if __name__ == '__main__':
         first_round(args.policy, args.to_render)
     else:
         second_round(args.policy, args.to_render)
-        
-        
-    stop = timeit.default_timer()
-
-    print('Time: ', stop - start)  
+    
