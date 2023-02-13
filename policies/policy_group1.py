@@ -10,6 +10,8 @@ class Group1(bp.Policy):
         self.epsilon = 0.05
         self.decay = 0.1
         self.window_size = 3
+        self.learning_rate = 0.01
+        self.gamma = 0.01
     
     def cast_string_args(self, policy_args):
         return policy_args
