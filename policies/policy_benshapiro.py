@@ -44,7 +44,6 @@ class Benshapiro(bp.Policy):
                 current_state_index = self.state_mapping.index(current_state)
                 self.Q_table[current_state] = [0, 0, 0]
         else:
-            self.log(f"in round {round} usin action {a}" )            
             try:
                 current_state_index = self.state_mapping.index(current_state)
                 chosen_action_index = np.argmax(self.Q_table[current_state_index,:])
