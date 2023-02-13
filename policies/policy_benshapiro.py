@@ -9,6 +9,7 @@ conversion_dict = {"N": 21, "S": 22, "E": 23, "W": 24}
 lr = 0.1
 gamma = 0.5
 ACTIONS = 3
+action_dict = {"R": 0, "L": 1, "F":2}
 
 class Benshapiro(bp.Policy): 
     def cast_string_args(self, policy_args):
@@ -54,19 +55,20 @@ class Benshapiro(bp.Policy):
                 self.Q_table[current_state] = [0, 0, 0]
                 chosen_action = self.smart_random_action(new_state)
         
-        self.learn_from_act(current_state_index, chosen_action, new_state)
+        self.learn_from_act(current_state_index, chosen_action, new_state, reward)
         return chosen_action
 
-    def learn_from_act(self, current_state_index, chosen_action, old_state):
-        new = (1-lr) * self.Q_table[current_state_index, chosen_action] 
+    def learn_from_act(self, current_state_index, chosen_action, old_state, reward):
+        new = (1-lr) * self.Q_table[current_state_index, action_dict[chosen_action]]
         next_state = self.next_relative_state(chosen_action, old_state)
         try:
             next_state_index = self.state_mapping.index(next_state)
         except:
             self.state_mapping.append(next_state)
-            self.Q_table[current_state] = [0, 0, 0]
-        new += lr*(reward + gamma*max(self.Q_table[next_state,:]))
-        self.Q_table[current_state_index, chosen_action] = new
+            next_state_index = self.state_mapping.index(next_state)
+            self.Q_table[next_state_index] = [0, 0, 0]
+        new += lr*(reward + gamma*max(self.Q_table[next_state_index,:]))
+        self.Q_table[current_state_index, action_dict[chosen_action]] = new
 
     def smart_random_action(self, new_state):
         board, head = new_state
@@ -116,21 +118,24 @@ class Benshapiro(bp.Policy):
             if chosen_action == "L":
                 new_direction = "N"
 
+        if chosen_action == "F":
+            new_direction = previous_direction
+
         # get a Position object of the position in the relevant direction from the head:
-        next_position = head_pos.move(bp.Policy.TURNS[new_direction][chosen_action])
+        next_position = previous_head_pos.move(bp.Policy.TURNS[new_direction][chosen_action])
         r = next_position[0]
         c = next_position[1]
 
-        return map_current_state(board, (r,c), new_direction)
+        return self.map_current_state(board, (r,c), new_direction)
 
     def relative_board(self, board, head_pos, direction):
-        print(board)
-        print(head_pos[0], head_pos[1])
-        print(direction)
+        # print(board)
+        # print(head_pos[0], head_pos[1])
+        # print(direction)
 
         # need to take into acount walls
         relative_board = board[head_pos[0] - (RADIUS - 2): head_pos[0] + (RADIUS - 1), head_pos[1] - (RADIUS - 2): head_pos[1] + (RADIUS - 1)]
-        print(relative_board)
+        # print(relative_board)
         return relative_board
 
     def map_current_state(self, board, head_pos, direction):
