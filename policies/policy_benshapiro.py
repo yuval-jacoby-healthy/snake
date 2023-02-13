@@ -3,7 +3,7 @@ from policies import base_policy as bp
 import numpy as np
 
 EPSILON = 0.05
-RADIUS = 3
+RADIUS = 5
 conversion_dict = {"N": 21, "S": 22, "E": 23, "W": 24}
 # get agruments on cast_string_args for testing
 lr = 0.1
@@ -24,7 +24,8 @@ class Benshapiro(bp.Policy):
         self.state_mapping = []
 
     def learn(self, round, prev_state, prev_action, reward, new_state, too_slow):
-        self.log(f"learning in round {round}")
+        pass
+        # self.log(f"learning in round {round}")
 
     def act(self, round, prev_state, prev_action, reward, new_state, too_slow):
         board, head = new_state
@@ -74,7 +75,7 @@ class Benshapiro(bp.Policy):
         board, head = new_state
         head_pos, direction = head
 
-        self.log(f"execute random choice. Current epsilon {self.epsilon}")
+        # self.log(f"execute random choice. Current epsilon {self.epsilon}")
         # TODO: check if should optimaize - run over the other possibilies after the initial random action
         counter = 0
         while True:
@@ -89,7 +90,7 @@ class Benshapiro(bp.Policy):
 
             # look at the board in the relevant position:
             if board[r, c] > 5 or board[r, c] < 0 or counter > 4:
-                self.log(f"{board[r, c]=}")
+                # self.log(f"{board[r, c]=}")
                 return random_action
 
     def next_relative_state(self, chosen_action, old_state):
@@ -135,11 +136,11 @@ class Benshapiro(bp.Policy):
 
         # need to take into acount walls
         # copy over the board with radius - left right
-        extended_board = np.concatenate((board[:, board.shape[1] - (RADIUS-1):], board), axis=1)
-        extended_board = np.concatenate((extended_board, board[:, :RADIUS-1]), axis=1)
+        extended_board = np.concatenate( (np.flip(board[:, board.shape[1] - (RADIUS-1):],1), board), axis=1)
+        extended_board = np.concatenate( (extended_board, np.flip(board[:, :RADIUS-1],1)), axis=1)
         # copy over the board with radius - top bottom
-        extended_board = np.concatenate((extended_board, extended_board[extended_board.shape[0] - (RADIUS-1):, :]), axis=0)
-        extended_board = np.concatenate((extended_board, extended_board[:RADIUS-1, :]), axis=0)
+        extended_board = np.concatenate( (np.flip(extended_board[extended_board.shape[0] - (RADIUS-1):, :],0), extended_board), axis=0)
+        extended_board = np.concatenate( (extended_board, np.flip(extended_board[:RADIUS-1, :], 0 )), axis=0)
 
         extended_head_pos = [0,0]
         extended_head_pos[0] = head_pos[0] + RADIUS - 1
