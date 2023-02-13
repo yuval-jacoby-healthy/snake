@@ -135,12 +135,15 @@ class Benshapiro(bp.Policy):
         # print(direction)
 
         # need to take into acount walls
-        # copy over the board with radius - left right
-        extended_board = np.concatenate( (np.flip(board[:, board.shape[1] - (RADIUS-1):],1), board), axis=1)
-        extended_board = np.concatenate( (extended_board, np.flip(board[:, :RADIUS-1],1)), axis=1)
-        # copy over the board with radius - top bottom
-        extended_board = np.concatenate( (np.flip(extended_board[extended_board.shape[0] - (RADIUS-1):, :],0), extended_board), axis=0)
-        extended_board = np.concatenate( (extended_board, np.flip(extended_board[:RADIUS-1, :], 0 )), axis=0)
+        # copy over the board with radius from right side to left
+        extended_board = np.concatenate( (board[:, board.shape[1] - (RADIUS-1):], board), axis=1)
+        # copy over the board with radius from left side to right
+        extended_board = np.concatenate( (extended_board, board[:, :RADIUS-1]), axis=1)
+        # copy over the board with radius from bottom to top
+        extended_board_copy = extended_board.copy()
+        extended_board = np.concatenate( (extended_board[extended_board.shape[0] - (RADIUS-1):, :], extended_board), axis=0)
+        # copy over the board with radius from top to bottom
+        extended_board = np.concatenate( (extended_board, extended_board_copy[:RADIUS-1, :]), axis=0)
 
         extended_head_pos = [0,0]
         extended_head_pos[0] = head_pos[0] + RADIUS - 1
