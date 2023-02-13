@@ -7,7 +7,7 @@ RADIUS = 5
 conversion_dict = {"N": 21, "S": 22, "E": 23, "W": 24}
 # get agruments on cast_string_args for testing
 lr = 0.1
-gamma = 0.5
+gamma = 0.99
 ACTIONS = 3
 action_dict = {"R": 0, "L": 1, "F":2}
 
