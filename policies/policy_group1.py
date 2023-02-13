@@ -10,14 +10,17 @@ class Group1(bp.Policy):
         self.epsilon = 0.05
         self.decay = 0.1
         self.window_size = 3
-        self.learning_rate = 0.01
-        self.gamma = 0.01
+        self.learning_rate = 0.1
+        self.discount_rate = 0.9
     
     def cast_string_args(self, policy_args):
         return policy_args
 
     def init_run(self):
         pass
+    
+    def calculate_Q():
+        
 
     def learn(self, round, prev_state, prev_action, reward, new_state, too_slow):
         self.log(f"learning in round {round}")
