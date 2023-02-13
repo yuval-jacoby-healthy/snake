@@ -1,32 +1,36 @@
 from policies import base_policy as bp
 
 import numpy as np
-from math import e
 
 EPSILON = 1
 RADIUS = 5
 conversion_dict = {"N": 21, "S": 22, "E": 23, "W": 24}
 # get agruments on cast_string_args for testing
-lr = 0.1
 gamma = 0.99
 ACTIONS = 3
 action_dict = {"R": 0, "L": 1, "F":2}
 
+LR = 0.3333
+min_lr = 0.00001
 
-epsilon_decay = 0.9999
+epsilon_decay = 1#0.9999
 min_epsilon = 0.01
 
 class Benshapiro(bp.Policy): 
     def cast_string_args(self, policy_args):
         policy_args['epsilon'] = float(policy_args['epsilon']) if 'epsilon' in policy_args else EPSILON
+        policy_args['lr'] = float(policy_args['lr']) if 'lr' in policy_args else LR
+        policy_args['radius'] = float(policy_args['radius']) if 'radius' in policy_args else RADIUS
         return policy_args
 
     def init_run(self):
         self.r_sum = 0
         # Initialize the Q-table to 0
-        self.n_observations = RADIUS**7
+        self.n_observations = int(self.radius)**7
         self.Q_table = np.zeros((self.n_observations, ACTIONS))
         self.state_mapping = []
+
+        self.radius = int(self.radius)
 
     def learn(self, round, prev_state, prev_action, reward, new_state, too_slow):
         pass
@@ -36,7 +40,7 @@ class Benshapiro(bp.Policy):
         board, head = new_state
         head_pos, direction = head
         self.r_sum += reward
-
+        # print(f"LR: {self.lr}, Epsilon: {self.epsilon}")
         chosen_action = None
         current_state = self.map_current_state(board, head_pos, direction)
         current_state_index = None
@@ -63,11 +67,12 @@ class Benshapiro(bp.Policy):
         self.learn_from_act(current_state_index, chosen_action, new_state, reward)
 
         self.epsilon = max(min_epsilon, epsilon_decay * self.epsilon)
+        self.lr = max(min_lr, epsilon_decay * self.lr)
 
         return chosen_action
 
     def learn_from_act(self, current_state_index, chosen_action, old_state, reward):
-        new = (1-lr) * self.Q_table[current_state_index, action_dict[chosen_action]]
+        new = (1-self.lr) * self.Q_table[current_state_index, action_dict[chosen_action]]
         next_state = self.next_relative_state(chosen_action, old_state)
         try:
             next_state_index = self.state_mapping.index(next_state)
@@ -75,7 +80,7 @@ class Benshapiro(bp.Policy):
             self.state_mapping.append(next_state)
             next_state_index = self.state_mapping.index(next_state)
             self.Q_table[next_state_index] = [0, 0, 0]
-        new += lr*(reward + gamma*max(self.Q_table[next_state_index,:]))
+        new += self.lr*(reward + gamma*max(self.Q_table[next_state_index,:]))
         self.Q_table[current_state_index, action_dict[chosen_action]] = new
 
     def smart_random_action(self, new_state):
@@ -142,21 +147,21 @@ class Benshapiro(bp.Policy):
         # print(direction)
 
         # need to take into acount walls
-        # copy over the board with radius from right side to left
-        extended_board = np.concatenate( (board[:, board.shape[1] - (RADIUS-1):], board), axis=1)
-        # copy over the board with radius from left side to right
-        extended_board = np.concatenate( (extended_board, board[:, :RADIUS-1]), axis=1)
+        # copy over the board with self.radius from right side to left
+        extended_board = np.concatenate( (board[:, board.shape[1] - (self.radius-1):], board), axis=1)
+        # copy over the board with self.radius from left side to right
+        extended_board = np.concatenate( (extended_board, board[:, :self.radius-1]), axis=1)
         # copy over the board with radius from bottom to top
         extended_board_copy = extended_board.copy()
-        extended_board = np.concatenate( (extended_board[extended_board.shape[0] - (RADIUS-1):, :], extended_board), axis=0)
+        extended_board = np.concatenate( (extended_board[extended_board.shape[0] - (self.radius-1):, :], extended_board), axis=0)
         # copy over the board with radius from top to bottom
-        extended_board = np.concatenate( (extended_board, extended_board_copy[:RADIUS-1, :]), axis=0)
+        extended_board = np.concatenate( (extended_board, extended_board_copy[:self.radius-1, :]), axis=0)
 
         extended_head_pos = [0,0]
-        extended_head_pos[0] = head_pos[0] + RADIUS - 1
-        extended_head_pos[1] = head_pos[1] + RADIUS - 1
+        extended_head_pos[0] = head_pos[0] + self.radius - 1
+        extended_head_pos[1] = head_pos[1] + self.radius - 1
 
-        relative_board = extended_board[extended_head_pos[0] - (RADIUS - 2): extended_head_pos[0] + (RADIUS - 1), extended_head_pos[1] - (RADIUS - 2): extended_head_pos[1] + (RADIUS - 1)]
+        relative_board = extended_board[extended_head_pos[0] - (self.radius - 2): extended_head_pos[0] + (self.radius - 1), extended_head_pos[1] - (self.radius - 2): extended_head_pos[1] + (self.radius - 1)]
         # print(relative_board)
         return relative_board
 
@@ -164,5 +169,5 @@ class Benshapiro(bp.Policy):
         relative_board = self.relative_board(board, head_pos, direction)
         converted_relative_board = relative_board.copy()
         converted_relative_board[(converted_relative_board >= 0) | (converted_relative_board <=5)] = -2
-        converted_relative_board[RADIUS -2, RADIUS -2] = conversion_dict[direction]
+        converted_relative_board[self.radius -2, self.radius -2] = conversion_dict[direction]
         return list(converted_relative_board.flatten())
