@@ -31,5 +31,25 @@ class Group1(bp.Policy):
         self.log(f"in round {round} usin action {a}" )
         return a
     
+    def get_window(self, state):
+        offset = self.window_size
+        board = state[0]
+        hr, hc = state[1][0].pos[0], state[1][0].pos[1]
+        dir = state[1][1]
+        row_range = range(hr - offset + 1, hr + offset)
+        col_range = range(hc - offset + 1, hc + offset)
+
+        window = np.array([row.take(col_range, mode='wrap') for row in board.take(row_range, axis=0, mode='wrap')])
+        if dir == 'E':
+            window = np.rot90(window)
+        elif dir == 'S':
+            window = np.rot90(window, k=2)
+        elif dir == 'W':
+            window = np.rot90(window, k=3)
+        
+        window = np.maximum(window, -1)
+        window = np.where((window > -1) & (window < 6), 0, window)
+        return window
+    
 
 
