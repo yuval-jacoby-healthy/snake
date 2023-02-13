@@ -8,6 +8,7 @@ conversion_dict = {"N": 21, "S": 22, "E": 23, "W": 24}
 # get agruments on cast_string_args for testing
 lr = 0.1
 gamma = 0.5
+ACTIONS = 3
 
 class Benshapiro(bp.Policy): 
     def cast_string_args(self, policy_args):
@@ -18,8 +19,7 @@ class Benshapiro(bp.Policy):
         self.r_sum = 0
         # Initialize the Q-table to 0
         self.n_observations = RADIUS**7
-        self.n_actions = 3
-        self.Q_table = np.zeros((self.n_observations,self.n_actions))
+        self.Q_table = np.zeros((self.n_observations, ACTIONS))
         self.state_mapping = []
 
     def learn(self, round, prev_state, prev_action, reward, new_state, too_slow):
@@ -43,7 +43,7 @@ class Benshapiro(bp.Policy):
                 self.state_mapping.append(current_state)
                 current_state_index = self.state_mapping.index(current_state)
                 self.Q_table[current_state] = [0, 0, 0]
-        else
+        else:
             self.log(f"in round {round} usin action {a}" )            
             try:
                 current_state_index = self.state_mapping.index(current_state)
@@ -55,10 +55,10 @@ class Benshapiro(bp.Policy):
                 self.Q_table[current_state] = [0, 0, 0]
                 chosen_action = self.smart_random_action(new_state)
         
-        self.learn(current_state_index, chosen_action, new_state)
+        self.learn_from_act(current_state_index, chosen_action, new_state)
         return chosen_action
 
-    def learn(self, current_state_index, chosen_action, old_state):
+    def learn_from_act(self, current_state_index, chosen_action, old_state):
         new = (1-lr) * self.Q_table[current_state_index, chosen_action] 
         next_state = self.next_relative_state(chosen_action, old_state)
         try:
@@ -135,7 +135,7 @@ class Benshapiro(bp.Policy):
         return relative_board
 
     def map_current_state(self, board, head_pos, direction):
-        relative_board = self.relative_board(new_state)
+        relative_board = self.relative_board(board, head_pos, direction)
         relative_board[(relative_board >= 0) | (relative_board <=5)] = -2
         relative_board[RADIUS -2, RADIUS -2] = conversion_dict[direction]
-        return list(np.flatten(relative_board))
+        return list(relative_board.flatten())
