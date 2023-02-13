@@ -1,8 +1,9 @@
 from policies import base_policy as bp
 
 import numpy as np
+from math import e
 
-EPSILON = 0.05
+EPSILON = 1
 RADIUS = 5
 conversion_dict = {"N": 21, "S": 22, "E": 23, "W": 24}
 # get agruments on cast_string_args for testing
@@ -10,6 +11,10 @@ lr = 0.1
 gamma = 0.99
 ACTIONS = 3
 action_dict = {"R": 0, "L": 1, "F":2}
+
+
+epsilon_decay = 0.9999
+min_epsilon = 0.01
 
 class Benshapiro(bp.Policy): 
     def cast_string_args(self, policy_args):
@@ -32,7 +37,6 @@ class Benshapiro(bp.Policy):
         head_pos, direction = head
         self.r_sum += reward
 
-        # print(board)
         chosen_action = None
         current_state = self.map_current_state(board, head_pos, direction)
         current_state_index = None
@@ -57,6 +61,9 @@ class Benshapiro(bp.Policy):
                 chosen_action = self.smart_random_action(new_state)
         
         self.learn_from_act(current_state_index, chosen_action, new_state, reward)
+
+        self.epsilon = max(min_epsilon, epsilon_decay * self.epsilon)
+
         return chosen_action
 
     def learn_from_act(self, current_state_index, chosen_action, old_state, reward):
