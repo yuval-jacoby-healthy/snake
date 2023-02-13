@@ -1,12 +1,16 @@
 from policies import base_policy as bp
 
 import numpy as np
+from queue import Queue
 
 class Group1(bp.Policy):
     
     def __init__(self, policy_args, board_size, stateq, actq, modelq, logq, id, game_duration, score_scope):
         super().__init__(policy_args, board_size, stateq, actq, modelq, logq, id, game_duration, score_scope)
         self.q_table = {}
+        self.action_dict = {"L": 0, "R": 1, "F": 2}
+        self.buffer = Queue()
+        self.r_sum = 0
         self.epsilon = 0.05
         self.decay = 0.1
         self.window_size = 3
