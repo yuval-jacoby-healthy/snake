@@ -17,19 +17,39 @@ class Group1(bp.Policy):
         return policy_args
 
     def init_run(self):
-        pass
+        self.q_table = {}
+        self.buffer = Queue()
+        
+    def calculate_Q(self, current_state, action, next_state, reward):
+        q = self.q_table[current_state][self.action_dict[[bp.Policy.ACTIONS[action]]]]
+        m = self.discount_rate * np.max(self.q_table[next_state])
+        return q + self.learning_rate * (reward + m * - q)
     
-    def calculate_Q():
-        
-        
-
     def learn(self, round, prev_state, prev_action, reward, new_state, too_slow):
-        self.log(f"learning in round {round}")
+        for observation in self.buffer:
+            self.q_table[observation[0]][self.action_dict[observation[1]]] = \
+            self.calculate_Q(observation[0], observation[1], observation[2], observation[3])
+        
+        # epsilon decay update
+        if round % 100 == 0:
+            self.epsilon *= self.decay
 
     def act(self, round, prev_state, prev_action, reward, new_state, too_slow):
-        a =  np.random.choice(bp.Policy.ACTIONS)
-        self.log(f"in round {round} usin action {a}" )
-        return a
+        # update
+        self.buffer.put([self.get_window(prev_state), prev_action, self.get_window(new_state), reward])
+        self.r_sum += reward
+
+        # choose the next action
+        if np.random.rand() < self.epsilon:
+            action = np.random.choice(bp.Policy.ACTIONS)
+        else:
+            if new_state not in self.q_table:
+                self.q_table[new_state] = np.zeros(3)
+            action = bp.Policy.ACTIONS[np.argmax(self.q_table[new_state])]
+
+        self.log(f"in round {round} using action {action}")
+
+        return action
     
     def get_window(self, state):
         offset = self.window_size
