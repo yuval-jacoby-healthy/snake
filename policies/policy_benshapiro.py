@@ -134,12 +134,24 @@ class Benshapiro(bp.Policy):
         # print(direction)
 
         # need to take into acount walls
-        relative_board = board[head_pos[0] - (RADIUS - 2): head_pos[0] + (RADIUS - 1), head_pos[1] - (RADIUS - 2): head_pos[1] + (RADIUS - 1)]
+        # copy over the board with radius - left right
+        extended_board = np.concatenate((board[:, board.shape[1] - (RADIUS-1):], board), axis=1)
+        extended_board = np.concatenate((extended_board, board[:, :RADIUS-1]), axis=1)
+        # copy over the board with radius - top bottom
+        extended_board = np.concatenate((extended_board, extended_board[extended_board.shape[0] - (RADIUS-1):, :]), axis=0)
+        extended_board = np.concatenate((extended_board, extended_board[:RADIUS-1, :]), axis=0)
+
+        extended_head_pos = [0,0]
+        extended_head_pos[0] = head_pos[0] + RADIUS - 1
+        extended_head_pos[1] = head_pos[1] + RADIUS - 1
+
+        relative_board = extended_board[extended_head_pos[0] - (RADIUS - 2): extended_head_pos[0] + (RADIUS - 1), extended_head_pos[1] - (RADIUS - 2): extended_head_pos[1] + (RADIUS - 1)]
         # print(relative_board)
         return relative_board
 
     def map_current_state(self, board, head_pos, direction):
         relative_board = self.relative_board(board, head_pos, direction)
-        relative_board[(relative_board >= 0) | (relative_board <=5)] = -2
-        relative_board[RADIUS -2, RADIUS -2] = conversion_dict[direction]
-        return list(relative_board.flatten())
+        converted_relative_board = relative_board.copy()
+        converted_relative_board[(converted_relative_board >= 0) | (converted_relative_board <=5)] = -2
+        converted_relative_board[RADIUS -2, RADIUS -2] = conversion_dict[direction]
+        return list(converted_relative_board.flatten())
