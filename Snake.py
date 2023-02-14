@@ -563,6 +563,6 @@ def parse_args():
 
 
 if __name__ == '__main__':
-    print(sys.argv)
+    # print(sys.argv)
     g = Game(parse_args())
     g.run()

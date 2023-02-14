@@ -3,7 +3,7 @@ from policies import base_policy as bp
 import numpy as np
 
 EPSILON = 1
-RADIUS = 5
+RADIUS = 7
 conversion_dict = {"N": 21, "S": 22, "E": 23, "W": 24}
 # get agruments on cast_string_args for testing
 gamma = 0.99
@@ -21,6 +21,8 @@ class Benshapiro(bp.Policy):
         policy_args['epsilon'] = float(policy_args['epsilon']) if 'epsilon' in policy_args else EPSILON
         policy_args['lr'] = float(policy_args['lr']) if 'lr' in policy_args else LR
         policy_args['radius'] = float(policy_args['radius']) if 'radius' in policy_args else RADIUS
+        policy_args['decay'] = float(policy_args['decay']) if 'decay' in policy_args else epsilon_decay
+
         return policy_args
 
     def init_run(self):
@@ -40,7 +42,7 @@ class Benshapiro(bp.Policy):
         board, head = new_state
         head_pos, direction = head
         self.r_sum += reward
-        # print(f"LR: {self.lr}, Epsilon: {self.epsilon}")
+        # print(f"LR: {self.lr}, Epsilon: {self.epsilon}, decay: {self.decay}, radius: {self.radius}")
         chosen_action = None
         current_state = self.map_current_state(board, head_pos, direction)
         current_state_index = None
@@ -66,9 +68,11 @@ class Benshapiro(bp.Policy):
         
         self.learn_from_act(current_state_index, chosen_action, new_state, reward)
 
-        self.epsilon = max(min_epsilon, epsilon_decay * self.epsilon)
-        self.lr = max(min_lr, epsilon_decay * self.lr)
+        self.epsilon = max(min_epsilon, self.decay * self.epsilon)
+        self.lr = max(min_lr, self.decay * self.lr)
 
+        # if round %500 == 0:
+        #     print(self.Q_table)
         return chosen_action
 
     def learn_from_act(self, current_state_index, chosen_action, old_state, reward):
