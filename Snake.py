@@ -29,7 +29,7 @@ NO_RESPONSE = "No Response: player took too long to respond with action. This is
 PLAYER_INIT_TIME = 60
 UNRESPONSIVE_PLAYER = "Unresponsive Player: the player hasn't responded in too long... SOMETHING IS WRONG!!"
 
-STATUS_SKIP = 2000
+STATUS_SKIP = 100
 TOO_SLOW_THRESHOLD = 3
 UNRESPONSIVE_THRESHOLD = 50
 LEARNING_TIME = 5
@@ -444,7 +444,7 @@ class Game(object):
                         time.sleep(self.render_rate)
                 else:
                     if r % STATUS_SKIP == 0:
-                        # print("At Round " + str(r) + " the scores are:")
+                        print("At Round " + str(r) + " the scores are:")
                         for i, s in enumerate(self.scores):
                             scope = np.min([len(self.scores[i]), self.score_scope])
                             if hasattr(self, "players"):

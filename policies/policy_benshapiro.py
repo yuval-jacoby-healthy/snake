@@ -2,19 +2,21 @@ from policies import base_policy as bp
 
 import numpy as np
 
-EPSILON = 1
-RADIUS = 7
+EPSILON = 0.3333
+RADIUS = 5
 conversion_dict = {"N": 21, "S": 22, "E": 23, "W": 24}
-# get agruments on cast_string_args for testing
+
 gamma = 0.99
 ACTIONS = 3
 action_dict = {"R": 0, "L": 1, "F":2}
 
-LR = 0.3333
+LR = 0.001
 min_lr = 0.00001
 
 epsilon_decay = 1#0.9999
 min_epsilon = 0.01
+
+
 
 class Benshapiro(bp.Policy): 
     def cast_string_args(self, policy_args):
@@ -65,7 +67,19 @@ class Benshapiro(bp.Policy):
                 current_state_index = self.state_mapping.index(current_state)
                 self.Q_table[current_state] = [0, 0, 0]
                 chosen_action = self.smart_random_action(new_state)
-        
+
+
+        ## Check that chosen action doesn't cause death and if so choose smart random
+        if self.check_action_for_death(new_state, chosen_action):
+            chosen_action = self.smart_random_action(new_state)
+            try:
+                current_state_index = self.state_mapping.index(current_state)
+            except:
+                self.state_mapping.append(current_state)
+                current_state_index = self.state_mapping.index(current_state)
+                self.Q_table[current_state] = [0, 0, 0]
+
+
         self.learn_from_act(current_state_index, chosen_action, new_state, reward)
 
         self.epsilon = max(min_epsilon, self.decay * self.epsilon)
@@ -87,6 +101,21 @@ class Benshapiro(bp.Policy):
         new += self.lr*(reward + gamma*max(self.Q_table[next_state_index,:]))
         self.Q_table[current_state_index, action_dict[chosen_action]] = new
 
+    def check_action_for_death(self, new_state, action):
+        board, head = new_state
+        head_pos, direction = head
+
+        next_position = head_pos.move(bp.Policy.TURNS[direction][action])
+        r = next_position[0]
+        c = next_position[1]
+
+        # look at the board in the relevant position:
+        if board[r, c] > 5 or board[r, c] < 0:
+            return False
+        else:
+            return True
+
+
     def smart_random_action(self, new_state):
         board, head = new_state
         head_pos, direction = head
@@ -105,7 +134,7 @@ class Benshapiro(bp.Policy):
             c = next_position[1]
 
             # look at the board in the relevant position:
-            if board[r, c] > 5 or board[r, c] < 0 or counter > 4:
+            if board[r, c] > 5 or board[r, c] < 0 or counter > 10:
                 # self.log(f"{board[r, c]=}")
                 return random_action
 
